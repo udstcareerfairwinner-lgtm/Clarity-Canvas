@@ -15,7 +15,7 @@ const EnhanceDiagramClarityInputSchema = z.object({
   diagramDataUri: z
     .string()
     .describe(
-      'A diagram drawn on a whiteboard, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.' // Corrected description
+      "A diagram drawn on a whiteboard, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type EnhanceDiagramClarityInput = z.infer<typeof EnhanceDiagramClarityInputSchema>;
