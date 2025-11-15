@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 type Point = { x: number; y: number };
 
@@ -15,7 +15,7 @@ export function useDrawing(
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevPointRef = useRef<Point | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,15 +38,16 @@ export function useDrawing(
     };
 
     const startDrawing = (e: MouseEvent | TouchEvent) => {
+      if ('button' in e && e.button !== 0) return; // Only draw with left mouse button
       e.preventDefault();
-      setIsDrawing(true);
+      isDrawingRef.current = true;
       const currentPoint = getPointerPosition(e);
       onDraw({ ctx, currentPoint, prevPoint: currentPoint }); // Allows for single dot drawing
       prevPointRef.current = currentPoint;
     };
 
     const draw = (e: MouseEvent | TouchEvent) => {
-      if (!isDrawing) return;
+      if (!isDrawingRef.current) return;
       e.preventDefault();
       const currentPoint = getPointerPosition(e);
       onDraw({ ctx, currentPoint, prevPoint: prevPointRef.current });
@@ -54,15 +55,14 @@ export function useDrawing(
     };
 
     const stopDrawing = () => {
-      setIsDrawing(false);
+      isDrawingRef.current = false;
       prevPointRef.current = null;
     };
 
     // Mouse events
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseleave', stopDrawing);
+    window.addEventListener('mouseup', stopDrawing); // Listen on window to catch mouseup outside canvas
 
     // Touch events
     canvas.addEventListener('touchstart', startDrawing, { passive: false });
@@ -73,8 +73,7 @@ export function useDrawing(
     return () => {
       canvas.removeEventListener('mousedown', startDrawing);
       canvas.removeEventListener('mousemove', draw);
-      canvas.removeEventListener('mouseup', stopDrawing);
-      canvas.removeEventListener('mouseleave', stopDrawing);
+      window.removeEventListener('mouseup', stopDrawing);
 
       canvas.removeEventListener('touchstart', startDrawing);
       canvas.removeEventListener('touchmove', draw);
@@ -83,5 +82,5 @@ export function useDrawing(
     };
   }, [onDraw]);
 
-  return { canvasRef, isDrawing };
+  return { canvasRef };
 }
