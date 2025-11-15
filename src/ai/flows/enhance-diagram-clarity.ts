@@ -33,39 +33,12 @@ export async function enhanceDiagramClarity(
   return enhanceDiagramClarityFlow(input);
 }
 
-const enhanceDiagramClarityPrompt = ai.definePrompt({
-  name: 'enhanceDiagramClarityPrompt',
-  input: {schema: EnhanceDiagramClarityInputSchema},
-  output: {schema: EnhanceDiagramClarityOutputSchema},
-  prompt: `You are an AI assistant that redraws diagrams to make them cleaner and more precise.
+const instruction = `You are an AI assistant that redraws diagrams to make them cleaner and more precise.
 
-  You will be given a diagram as a data URI. Redraw this diagram, cleaning up any imperfections and making the shapes more precise.
-  Output the redrawn diagram as a data URI.
+You will be given a diagram as a data URI. Redraw this diagram, cleaning up any imperfections and making the shapes more precise.
+Output the redrawn diagram as a data URI.
 
-  Original Diagram: {{media url=diagramDataUri}}
-
-  Redrawn Diagram:`, // Corrected template syntax
-  config: {
-    safetySettings: [
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_ONLY_HIGH',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_LOW_AND_ABOVE',
-      },
-    ],
-  },
-});
+Redrawn Diagram:`;
 
 const enhanceDiagramClarityFlow = ai.defineFlow(
   {
@@ -81,13 +54,29 @@ const enhanceDiagramClarityFlow = ai.defineFlow(
           media: {url: input.diagramDataUri},
         },
         {
-          text: enhanceDiagramClarityPrompt.prompt({
-            diagramDataUri: input.diagramDataUri,
-          }),
+          text: instruction,
         },
       ],
       config: {
-        responseModalities: ['TEXT', 'IMAGE'],
+        responseModalities: ['IMAGE'], // We only need an image back
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_ONLY_HIGH',
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_LOW_AND_ABOVE',
+          },
+        ],
       },
     });
 
