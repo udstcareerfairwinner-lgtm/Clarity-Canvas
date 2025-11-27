@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useDrawing } from '@/hooks/use-drawing';
 import { Toolbar } from './toolbar';
@@ -31,7 +31,7 @@ export function ClarityCanvas() {
       ctx.lineWidth = lineWidth;
     } else if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = lineWidth * 4;
+      ctx.lineWidth = lineWidth * 4; // Make eraser bigger
     }
 
     ctx.beginPath();
@@ -40,12 +40,13 @@ export function ClarityCanvas() {
       ctx.lineTo(currentPoint.x, currentPoint.y);
       ctx.stroke();
     }
+    // Draw a circle at the current point to make the line feel smoother
     ctx.arc(currentPoint.x, currentPoint.y, ctx.lineWidth / 2, 0, 2 * Math.PI);
     ctx.fill();
 
   }, [tool, color, lineWidth]);
 
-  const { canvasRef } = useDrawing(onDraw);
+  const { canvasRef, isDrawing } = useDrawing(onDraw);
 
   const handleClear = () => {
     const canvas = canvasRef.current;
@@ -57,6 +58,15 @@ export function ClarityCanvas() {
   };
 
   const handleEnhance = async () => {
+    if (isDrawing()) {
+      toast({
+        title: 'Still Drawing',
+        description: 'Please finish drawing before enhancing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -89,8 +99,9 @@ export function ClarityCanvas() {
     } else if (result.enhancedDiagramDataUri) {
       setEnhancedImage(result.enhancedDiagramDataUri);
       toast({
-        title: 'Success!',
-        description: 'Your diagram has been enhanced.',
+        title: 'Diagram Enhanced!',
+        description: 'The AI has successfully redrawn your diagram.',
+        className: 'bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700',
       });
     }
 
@@ -132,13 +143,12 @@ export function ClarityCanvas() {
             <CardTitle className="font-headline">AI Enhanced Diagram</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video w-full bg-white rounded-lg flex items-center justify-center overflow-hidden border p-2">
+            <div className="aspect-video w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border p-2">
               {isLoading ? (
-                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                <div className="w-full h-full flex flex-col items-center justify-center space-y-4 text-center p-4">
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  <p className="text-muted-foreground font-medium">AI is redrawing your diagram...</p>
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-4 w-[200px]" />
+                  <p className="text-muted-foreground font-medium">The AI is redrawing your diagram...</p>
+                  <p className="text-sm text-muted-foreground/80">This may take a few seconds.</p>
                 </div>
               ) : enhancedImage ? (
                 <Image
@@ -152,7 +162,7 @@ export function ClarityCanvas() {
                 <div className="text-center text-muted-foreground p-8 space-y-2">
                   <Sparkles className="mx-auto h-12 w-12 text-slate-300" />
                   <p className="font-bold text-lg">Magic Awaits</p>
-                  <p className="text-sm">Draw something on the whiteboard and click the '✨ Enhance' button to see the AI transform your sketch!</p>
+                  <p className="text-sm">Draw on the whiteboard, then click '✨ Enhance' to see the AI transform your sketch!</p>
                 </div>
               )}
             </div>
