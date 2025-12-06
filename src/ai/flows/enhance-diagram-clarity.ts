@@ -36,9 +36,7 @@ export async function enhanceDiagramClarity(
 const instruction = `You are an AI assistant that redraws diagrams to make them cleaner and more precise.
 
 You will be given a diagram as a data URI. Redraw this diagram, cleaning up any imperfections and making the shapes more precise.
-Output the redrawn diagram as a data URI.
-
-Redrawn Diagram:`;
+Output the redrawn diagram as a data URI.`;
 
 const enhanceDiagramClarityFlow = ai.defineFlow(
   {
