@@ -32,11 +32,13 @@ export default function Home() {
               Clarity Canvas uses AI to instantly redraw your hand-drawn
               diagrams, flowcharts, and mind maps into clean, professional-looking visuals.
             </p>
-            <Link href="/canvas">
-              <Button size="lg" className="text-lg">
-                Start Drawing Now
-              </Button>
-            </Link>
+            <div className="pt-4">
+              <Link href="/canvas">
+                <Button size="lg" className="text-lg">
+                  Start Drawing Now
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
       </main>
