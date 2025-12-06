@@ -22,8 +22,8 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-1">
-        <section className="container grid lg:grid-cols-2 gap-12 items-center py-20 md:py-32">
-          <div className="space-y-6">
+        <section className="container flex items-center justify-center text-center py-20 md:py-32">
+          <div className="space-y-6 max-w-2xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-bold tracking-tighter">
               Transform Your Sketches into{' '}
               <span className="text-primary">Polished Diagrams</span>
@@ -37,15 +37,6 @@ export default function Home() {
                 Start Drawing Now
               </Button>
             </Link>
-          </div>
-          <div className="flex justify-center">
-            <Image
-              src="https://storage.googleapis.com/studioprompt/asset-library/clarity-canvas-demo.png"
-              alt="Clarity Canvas Demo"
-              width={600}
-              height={400}
-              className="rounded-xl shadow-2xl border"
-            />
           </div>
         </section>
       </main>
