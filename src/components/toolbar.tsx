@@ -110,7 +110,7 @@ export function Toolbar({
             </TooltipContent>
           </Tooltip>
 
-          <Button onClick={onEnhance} disabled={isLoading} className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold">
+          <Button onClick={onEnhance} disabled={isLoading} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
