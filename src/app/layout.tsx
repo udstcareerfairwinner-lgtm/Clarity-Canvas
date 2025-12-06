@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
@@ -15,7 +14,7 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Clarity Canvas",
   description: "AI-powered whiteboard to enhance your diagrams.",
 };
@@ -27,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased" suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
