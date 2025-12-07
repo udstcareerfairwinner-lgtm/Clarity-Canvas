@@ -8,7 +8,7 @@ import { Toolbar } from './toolbar';
 import { handleEnhanceDiagram, handleGenerateDiagram } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, Wand, LayoutTemplate, BarChart, GitMerge, PieChart, Workflow } from 'lucide-react';
+import { Loader2, Sparkles, Wand, LayoutTemplate, BarChart, GitMerge, PieChart, Workflow, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
@@ -33,6 +33,7 @@ export function ClarityCanvas() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('draw');
   const [prompt, setPrompt] = useState('');
+  const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
   const { toast } = useToast();
 
   const onDraw = useCallback(({ ctx, currentPoint, prevPoint }: { ctx: CanvasRenderingContext2D; currentPoint: { x: number; y: number }; prevPoint: { x: number; y: number } | null }) => {
@@ -114,6 +115,7 @@ export function ClarityCanvas() {
       });
     } else if (result.enhancedDiagramDataUri) {
       setGeneratedImage(result.enhancedDiagramDataUri);
+      setIsRightPanelVisible(true);
       toast({
         title: 'Diagram Enhanced!',
         description: 'The AI has successfully redrawn your diagram.',
@@ -148,6 +150,7 @@ export function ClarityCanvas() {
       });
     } else if (result.diagramDataUri) {
       setGeneratedImage(result.diagramDataUri);
+      setIsRightPanelVisible(true);
       toast({
         title: 'Diagram Generated!',
         description: 'The AI has successfully generated your diagram.',
@@ -170,6 +173,14 @@ export function ClarityCanvas() {
                 Clarity Canvas
                 </span>
             </Link>
+            <div className="ml-auto">
+              {!isRightPanelVisible && (
+                <Button variant="ghost" size="icon" onClick={() => setIsRightPanelVisible(true)}>
+                  <PanelRightOpen />
+                  <span className="sr-only">Open AI Diagram Panel</span>
+                </Button>
+              )}
+            </div>
         </div>
       </header>
       <div className="flex flex-1">
@@ -198,7 +209,7 @@ export function ClarityCanvas() {
             </SidebarContent>
         </Sidebar>
         <main className="flex-1 p-4 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className={`grid gap-8 items-start ${isRightPanelVisible ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="draw">Draw & Enhance</TabsTrigger>
@@ -262,36 +273,42 @@ export function ClarityCanvas() {
                 </TabsContent>
             </Tabs>
             
-            <Card className="shadow-lg">
-                <CardHeader>
-                <CardTitle className="font-headline">AI Diagram</CardTitle>
-                </CardHeader>
-                <CardContent>
-                <div className="aspect-video w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border p-2">
-                    {isLoading ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center space-y-4 text-center p-4">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <p className="text-muted-foreground font-medium">The AI is working its magic...</p>
-                        <p className="text-sm text-muted-foreground/80">This may take a few seconds.</p>
-                    </div>
-                    ) : generatedImage ? (
-                    <Image
-                        src={generatedImage}
-                        alt="Generated diagram"
-                        width={1280}
-                        height={720}
-                        className="object-contain w-full h-full"
-                    />
-                    ) : (
-                    <div className="text-center text-muted-foreground p-8 space-y-2">
-                        <Sparkles className="mx-auto h-12 w-12 text-slate-300" />
-                        <p className="font-bold text-lg">Magic Awaits</p>
-                        <p className="text-sm">Your enhanced or generated diagram will appear here.</p>
-                    </div>
-                    )}
-                </div>
-                </CardContent>
-            </Card>
+            {isRightPanelVisible && (
+              <Card className="shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="font-headline">AI Diagram</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setIsRightPanelVisible(false)}>
+                      <PanelRightClose />
+                      <span className="sr-only">Collapse AI Diagram Panel</span>
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                  <div className="aspect-video w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border p-2">
+                      {isLoading ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center space-y-4 text-center p-4">
+                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                          <p className="text-muted-foreground font-medium">The AI is working its magic...</p>
+                          <p className="text-sm text-muted-foreground/80">This may take a few seconds.</p>
+                      </div>
+                      ) : generatedImage ? (
+                      <Image
+                          src={generatedImage}
+                          alt="Generated diagram"
+                          width={1280}
+                          height={720}
+                          className="object-contain w-full h-full"
+                      />
+                      ) : (
+                      <div className="text-center text-muted-foreground p-8 space-y-2">
+                          <Sparkles className="mx-auto h-12 w-12 text-slate-300" />
+                          <p className="font-bold text-lg">Magic Awaits</p>
+                          <p className="text-sm">Your enhanced or generated diagram will appear here.</p>
+                      </div>
+                      )}
+                  </div>
+                  </CardContent>
+              </Card>
+            )}
             </div>
         </main>
         </div>
