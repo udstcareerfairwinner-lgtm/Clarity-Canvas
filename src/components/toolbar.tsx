@@ -43,6 +43,7 @@ export function Toolbar({
                 size="icon"
                 onClick={() => setTool('pen')}
                 aria-label="Select pen tool"
+                disabled={isLoading}
               >
                 <PenLine className="h-5 w-5" />
               </Button>
@@ -59,6 +60,7 @@ export function Toolbar({
                 size="icon"
                 onClick={() => setTool('eraser')}
                 aria-label="Select eraser tool"
+                disabled={isLoading}
               >
                 <Eraser className="h-5 w-5" />
               </Button>
@@ -78,7 +80,7 @@ export function Toolbar({
               value={color}
               onChange={(e) => setColor(e.target.value)}
               className="w-10 h-10 p-1 cursor-pointer"
-              disabled={tool !== 'pen'}
+              disabled={tool !== 'pen' || isLoading}
               aria-label="Color picker"
             />
           </div>
@@ -94,6 +96,7 @@ export function Toolbar({
               onChange={(e) => setLineWidth(Number(e.target.value))}
               className="w-24 cursor-pointer"
               aria-label="Line width slider"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -101,7 +104,7 @@ export function Toolbar({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={onClear} aria-label="Clear canvas">
+              <Button variant="outline" size="icon" onClick={onClear} aria-label="Clear canvas" disabled={isLoading}>
                 <Trash2 className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
