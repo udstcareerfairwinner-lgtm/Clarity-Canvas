@@ -2,18 +2,28 @@
 
 import { useCallback, useState, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useDrawing } from '@/hooks/use-drawing';
 import { Toolbar } from './toolbar';
 import { handleEnhanceDiagram, handleGenerateDiagram } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, Wand } from 'lucide-react';
+import { Loader2, Sparkles, Wand, LayoutTemplate, BarChart, GitMerge, PieChart, Workflow } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
+import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './ui/sidebar';
+import { Icons } from './icons';
 
 type Tool = 'pen' | 'eraser';
+
+const diagramTemplates = [
+  { name: 'Venn Diagram', icon: GitMerge, prompt: 'A simple, clean, two-circle Venn diagram with labels A and B.' },
+  { name: 'Flowchart', icon: Workflow, prompt: 'A basic flowchart with a start, a decision block, and two end points.' },
+  { name: 'Bar Chart', icon: BarChart, prompt: 'A simple bar chart with three bars of different heights.' },
+  { name: 'Pie Chart', icon: PieChart, prompt: 'A pie chart divided into three distinct slices.' },
+];
 
 export function ClarityCanvas() {
   const [tool, setTool] = useState<Tool>('pen');
@@ -21,6 +31,7 @@ export function ClarityCanvas() {
   const [lineWidth, setLineWidth] = useState(5);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('draw');
   const [prompt, setPrompt] = useState('');
   const { toast } = useToast();
 
@@ -90,6 +101,7 @@ export function ClarityCanvas() {
 
     setIsLoading(true);
     setGeneratedImage(null);
+    setActiveTab('draw');
 
     const diagramDataUri = canvas.toDataURL('image/png');
     const result = await handleEnhanceDiagram({ diagramDataUri });
@@ -112,8 +124,8 @@ export function ClarityCanvas() {
     setIsLoading(false);
   };
 
-  const handleGenerate = async () => {
-    if (!prompt) {
+  const handleGenerate = async (generationPrompt: string) => {
+    if (!generationPrompt) {
       toast({
         title: 'Prompt is Empty',
         description: 'Please describe the diagram you want to generate.',
@@ -124,8 +136,9 @@ export function ClarityCanvas() {
 
     setIsLoading(true);
     setGeneratedImage(null);
+    setActiveTab('generate');
 
-    const result = await handleGenerateDiagram({ prompt });
+    const result = await handleGenerateDiagram({ prompt: generationPrompt });
     
     if (result.error) {
       toast({
@@ -146,102 +159,143 @@ export function ClarityCanvas() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <Tabs defaultValue="draw" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="draw">Draw & Enhance</TabsTrigger>
-            <TabsTrigger value="generate">Generate from Prompt</TabsTrigger>
-          </TabsList>
-          <TabsContent value="draw">
+    <SidebarProvider>
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+            <SidebarTrigger className="mr-4" />
+            <Link href="/" className="mr-4 flex items-center">
+                <Icons.logo className="h-8 w-8 mr-2 text-primary" />
+                <span className="font-headline text-2xl font-bold tracking-tighter">
+                Clarity Canvas
+                </span>
+            </Link>
+        </div>
+      </header>
+      <div className="flex flex-1">
+        <Sidebar>
+            <SidebarContent>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <div className="p-2">
+                          <h2 className="font-headline text-lg font-semibold tracking-tighter">Templates</h2>
+                          <p className="text-sm text-muted-foreground">Click to generate a diagram</p>
+                        </div>
+                    </SidebarMenuItem>
+                    {diagramTemplates.map((template) => (
+                    <SidebarMenuItem key={template.name}>
+                        <SidebarMenuButton 
+                          onClick={() => handleGenerate(template.prompt)}
+                          disabled={isLoading}
+                          tooltip={template.name}
+                        >
+                          <template.icon />
+                          <span>{template.name}</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+            </SidebarContent>
+        </Sidebar>
+        <main className="flex-1 p-4 md:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="draw">Draw & Enhance</TabsTrigger>
+                <TabsTrigger value="generate">Generate from Prompt</TabsTrigger>
+                </TabsList>
+                <TabsContent value="draw">
+                <Card className="shadow-lg">
+                    <CardHeader>
+                    <CardTitle className="font-headline">Your Whiteboard</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                    <Toolbar 
+                        tool={tool}
+                        setTool={setTool}
+                        color={color}
+                        setColor={setColor}
+                        lineWidth={lineWidth}
+                        setLineWidth={setLineWidth}
+                        onClear={handleClear}
+                        onEnhance={handleEnhance}
+                        isLoading={isLoading}
+                    />
+                    <div className="aspect-video w-full bg-white rounded-b-lg overflow-hidden border-t cursor-crosshair">
+                        <canvas
+                        ref={canvasRef}
+                        width={1280}
+                        height={720}
+                        className="w-full h-full"
+                        />
+                    </div>
+                    </CardContent>
+                </Card>
+                </TabsContent>
+                <TabsContent value="generate">
+                <Card className="shadow-lg">
+                    <CardHeader>
+                    <CardTitle className="font-headline">Describe Your Diagram</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                    <div className="grid w-full gap-1.5">
+                        <Label htmlFor="prompt">Prompt</Label>
+                        <Textarea 
+                        id="prompt" 
+                        placeholder="e.g., A flowchart for a user login process."
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        rows={5}
+                        disabled={isLoading}
+                        />
+                    </div>
+                    <Button onClick={() => handleGenerate(prompt)} disabled={isLoading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
+                        {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                        <Wand className="mr-2 h-4 w-4" />
+                        )}
+                        Generate Diagram
+                    </Button>
+                    </CardContent>
+                </Card>
+                </TabsContent>
+            </Tabs>
+            
             <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="font-headline">Your Whiteboard</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Toolbar 
-                  tool={tool}
-                  setTool={setTool}
-                  color={color}
-                  setColor={setColor}
-                  lineWidth={lineWidth}
-                  setLineWidth={setLineWidth}
-                  onClear={handleClear}
-                  onEnhance={handleEnhance}
-                  isLoading={isLoading}
-                />
-                <div className="aspect-video w-full bg-white rounded-b-lg overflow-hidden border-t cursor-crosshair">
-                  <canvas
-                    ref={canvasRef}
-                    width={1280}
-                    height={720}
-                    className="w-full h-full"
-                  />
+                <CardHeader>
+                <CardTitle className="font-headline">AI Diagram</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <div className="aspect-video w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border p-2">
+                    {isLoading ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center space-y-4 text-center p-4">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <p className="text-muted-foreground font-medium">The AI is working its magic...</p>
+                        <p className="text-sm text-muted-foreground/80">This may take a few seconds.</p>
+                    </div>
+                    ) : generatedImage ? (
+                    <Image
+                        src={generatedImage}
+                        alt="Generated diagram"
+                        width={1280}
+                        height={720}
+                        className="object-contain w-full h-full"
+                    />
+                    ) : (
+                    <div className="text-center text-muted-foreground p-8 space-y-2">
+                        <Sparkles className="mx-auto h-12 w-12 text-slate-300" />
+                        <p className="font-bold text-lg">Magic Awaits</p>
+                        <p className="text-sm">Your enhanced or generated diagram will appear here.</p>
+                    </div>
+                    )}
                 </div>
-              </CardContent>
+                </CardContent>
             </Card>
-          </TabsContent>
-          <TabsContent value="generate">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="font-headline">Describe Your Diagram</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid w-full gap-1.5">
-                  <Label htmlFor="prompt">Prompt</Label>
-                  <Textarea 
-                    id="prompt" 
-                    placeholder="e.g., A flowchart for a user login process."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    rows={5}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wand className="mr-2 h-4 w-4" />
-                  )}
-                  Generate Diagram
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-headline">AI Diagram</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border p-2">
-              {isLoading ? (
-                <div className="w-full h-full flex flex-col items-center justify-center space-y-4 text-center p-4">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  <p className="text-muted-foreground font-medium">The AI is working its magic...</p>
-                  <p className="text-sm text-muted-foreground/80">This may take a few seconds.</p>
-                </div>
-              ) : generatedImage ? (
-                <Image
-                  src={generatedImage}
-                  alt="Generated diagram"
-                  width={1280}
-                  height={720}
-                  className="object-contain w-full h-full"
-                />
-              ) : (
-                <div className="text-center text-muted-foreground p-8 space-y-2">
-                  <Sparkles className="mx-auto h-12 w-12 text-slate-300" />
-                  <p className="font-bold text-lg">Magic Awaits</p>
-                  <p className="text-sm">Your enhanced or generated diagram will appear here.</p>
-                </div>
-              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+        </main>
+        </div>
     </div>
+    </SidebarProvider>
   );
 }
